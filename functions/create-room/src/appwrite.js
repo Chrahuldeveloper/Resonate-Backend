@@ -1,4 +1,4 @@
-import { Client, Databases, ID } from "node-appwrite";
+const { Client, Databases, ID } = require("node-appwrite");
 
 class AppwriteService {
   constructor() {
@@ -24,4 +24,4 @@ class AppwriteService {
   }
 }
 
-export default AppwriteService;
+module.exports = AppwriteService;
