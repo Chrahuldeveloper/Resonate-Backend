@@ -1,5 +1,3 @@
-const createDocumentMock = jest.fn().mockResolvedValue({ $id: "room-123" });
-
 jest.mock("node-appwrite", () => {
   return {
     Client: jest.fn().mockImplementation(() => ({
