@@ -17,7 +17,8 @@ jest.mock("node-appwrite", () => {
 });
 
 const AppwriteService = require("./appwrite");
-describe("AppwriteService", () => {
+
+describe("Testing AppwriteService", () => {
   let service;
 
   beforeEach(() => {
