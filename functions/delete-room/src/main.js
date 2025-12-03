@@ -62,14 +62,13 @@ module.exports = async ({ req, res, log, error }) => {
       [Query.equal("roomId", [appwriteRoomDocId])]
     );
     log(participantColRef);
-    participantColRef.documents.forEach(async (participant) => {
+    for (const participant of participantColRef.documents) {
       await databases.deleteDocument(
         process.env.MASTER_DATABASE_ID,
         process.env.PARTICIPANTS_COLLECTION_ID,
         participant.$id
       );
-    });
-
+    }
     await roomServiceClient.deleteRoom(appwriteRoomDocId);
     return res.json({ msg: "Room deleted successfully" });
   } catch (e) {
