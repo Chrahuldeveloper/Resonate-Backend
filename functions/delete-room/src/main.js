@@ -1,8 +1,8 @@
-import { Client, Databases, Query } from "node-appwrite";
-import { RoomServiceClient } from "livekit-server-sdk";
-import { throwIfMissing } from "./utils.js";
+const { Client, Databases, Query } = require("node-appwrite");
+const { throwIfMissing } = require("./utils.js");
+const { RoomServiceClient } = require("livekit-server-sdk");
 
-export default async ({ req, res, log, error }) => {
+module.exports = async ({ req, res, log, error }) => {
   throwIfMissing(process.env, [
     "APPWRITE_API_KEY",
     "MASTER_DATABASE_ID",
@@ -50,14 +50,12 @@ export default async ({ req, res, log, error }) => {
       return res.json({ msg: "User is not room admin" }, 403);
     }
 
-    //Delete Appwrite room doc
     await databases.deleteDocument(
       process.env.MASTER_DATABASE_ID,
       process.env.ROOMS_COLLECTION_ID,
       appwriteRoomDocId
     );
 
-    // Removing participants from collection
     const participantColRef = await databases.listDocuments(
       process.env.MASTER_DATABASE_ID,
       process.env.PARTICIPANTS_COLLECTION_ID,
@@ -72,7 +70,6 @@ export default async ({ req, res, log, error }) => {
       );
     });
 
-    // Delete livekit room
     await roomServiceClient.deleteRoom(appwriteRoomDocId);
     return res.json({ msg: "Room deleted successfully" });
   } catch (e) {
