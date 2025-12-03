@@ -10,7 +10,9 @@ module.exports = async ({ req, res, log, error }) => {
   ]);
 
   const client = new Client()
-    .setEndpoint(process.env.APPWRITE_ENDPOINT ?? "https://cloud.appwrite.io/v1")
+    .setEndpoint(
+      process.env.APPWRITE_ENDPOINT ?? "https://cloud.appwrite.io/v1"
+    )
     .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
     .setKey(process.env.APPWRITE_API_KEY);
 
@@ -19,7 +21,7 @@ module.exports = async ({ req, res, log, error }) => {
   log(req.headers);
   const triggerEvent = req.headers["x-appwrite-event"];
   const parts = triggerEvent.split(".");
-  const newRequestDocId = parts[parts.length - 1]; // safer way to get last segment
+  const newRequestDocId = parts[parts.length - 1];
   log(newRequestDocId);
 
   const newRequestDoc = await db.getDocument(
@@ -49,7 +51,7 @@ module.exports = async ({ req, res, log, error }) => {
 
   log(requestDocsRef.documents);
 
-  for (let index = 0; index < requestDocsRef.total; index++) {
+  for (let index = 0; index < requestDocsRef.documents.length; index++) {
     try {
       const newPairDoc = await db.createDocument(
         process.env.DATABASE_ID,

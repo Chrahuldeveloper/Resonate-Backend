@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Function to join room",
   "main": "src/main.js",
-  "type": "module",
   "scripts": {
     "test": "jest",
     "start": "node src/main.js",
