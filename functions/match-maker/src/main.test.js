@@ -104,4 +104,26 @@ describe("Random Pairing Function", () => {
     expect(error).toHaveBeenCalledWith("That request is already paired: ");
     expect(error).toHaveBeenCalledWith("Error: Pairing failed");
   });
+
+  it("should create pair and delete requests on successful match", async () => {
+    await sendPairRequest({ req, res, log, error });
+
+    expect(mockDb.createDocument).toHaveBeenCalledWith(
+      "db",
+      "pairs",
+      "unique-id",
+      expect.objectContaining({
+        uid1: "uid1",
+        uid2: "uid2",
+        userDocId1: "123",
+        userDocId2: "456",
+      })
+    );
+    expect(mockDb.deleteDocument).toHaveBeenCalledTimes(2);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.any(String),
+      })
+    );
+  });
 });
