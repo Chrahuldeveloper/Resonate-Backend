@@ -5,7 +5,9 @@ class AppwriteService {
   constructor() {
     const client = new Client();
     client
-      .setEndpoint(process.env.APPWRITE_ENDPOINT ?? "https://cloud.appwrite.io/v1")
+      .setEndpoint(
+        process.env.APPWRITE_ENDPOINT ?? "https://cloud.appwrite.io/v1"
+      )
       .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
       .setKey(process.env.APPWRITE_API_KEY);
 
@@ -54,42 +56,48 @@ class AppwriteService {
     }
   }
 
-  async cleanActivePairsCollection() {
-    let done = true;
-    const queries = [
-      Query.lessThan("$createdAt", getExpiryDate()),
-      Query.limit(25),
-    ];
+  async cleanParticipantsCollection() {
+    let cursor = null;
 
-    do {
-      const activePairDocs = await this.databases.listDocuments(
+    while (true) {
+      const queries = [Query.limit(25)];
+      if (cursor) {
+        queries.push(Query.cursorAfter(cursor));
+      }
+
+      const participantDocs = await this.databases.listDocuments(
         process.env.MASTER_DATABASE_ID,
-        process.env.ACTIVE_PAIRS_COLLECTION_ID,
+        process.env.PARTICIPANTS_COLLECTION_ID,
         queries
       );
 
+      if (participantDocs.documents.length === 0) {
+        break;
+      }
+
       await Promise.all(
-        activePairDocs.documents.map((activePairDoc) =>
-          this.databases.deleteDocument(
-            process.env.MASTER_DATABASE_ID,
-            process.env.ACTIVE_PAIRS_COLLECTION_ID,
-            activePairDoc.$id
-          )
-        )
+        participantDocs.documents.map(async (participantDoc) => {
+          const exists = await this.doesRoomExist(participantDoc.roomId);
+          if (!exists) {
+            await this.databases.deleteDocument(
+              process.env.MASTER_DATABASE_ID,
+              process.env.PARTICIPANTS_COLLECTION_ID,
+              participantDoc.$id
+            );
+          }
+        })
       );
 
-      done = activePairDocs.total === 0;
-    } while (!done);
+      cursor =
+        participantDocs.documents[participantDocs.documents.length - 1].$id;
+    }
   }
 
   async clearOldOTPs() {
     let done = false;
     const currentDate = new Date().toDateString();
 
-    const queries = [
-      Query.notEqual("date", currentDate),
-      Query.limit(100),
-    ];
+    const queries = [Query.notEqual("date", currentDate), Query.limit(100)];
 
     do {
       const oneDayOldOTPs = await this.databases.listDocuments(
