@@ -94,17 +94,24 @@ class AppwriteService {
   }
 
   async clearOldOTPs() {
-    let done = false;
+    let cursor = null;
     const currentDate = new Date().toDateString();
 
-    const queries = [Query.notEqual("date", currentDate), Query.limit(100)];
+    while (true) {
+      const queries = [Query.notEqual("date", currentDate), Query.limit(100)];
+      if (cursor) {
+        queries.push(Query.cursorAfter(cursor));
+      }
 
-    do {
       const oneDayOldOTPs = await this.databases.listDocuments(
         process.env.VERIFICATION_DATABASE_ID,
         process.env.OTP_COLLECTION_ID,
         queries
       );
+
+      if (oneDayOldOTPs.documents.length === 0) {
+        break;
+      }
 
       await Promise.all(
         oneDayOldOTPs.documents.map(async (otp) => {
@@ -116,8 +123,8 @@ class AppwriteService {
         })
       );
 
-      done = oneDayOldOTPs.total === 0;
-    } while (!done);
+      cursor = oneDayOldOTPs.documents[oneDayOldOTPs.documents.length - 1].$id;
+    }
   }
 }
 
