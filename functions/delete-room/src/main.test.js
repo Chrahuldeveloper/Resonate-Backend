@@ -1,4 +1,5 @@
-const handler = require("../src/main.js"); 
+const handler = require("../src/main.js"); // adjust path if needed
+
 jest.mock("node-appwrite", () => ({
   Client: jest.fn().mockImplementation(() => ({
     setEndpoint: jest.fn().mockReturnThis(),
@@ -26,6 +27,15 @@ jest.mock("../src/utils.js", () => ({
     keys.forEach((key) => {
       if (!obj[key]) throw new Error(`Missing ${key}`);
     });
+    const missing = [];
+    for (let key of keys) {
+      if (!(key in obj) || !obj[key]) {
+        missing.push(key);
+      }
+    }
+    if (missing.length > 0) {
+      throw new Error(`Missing required fields: ${missing.join(", ")}`);
+    }
   }),
 }));
 
@@ -62,7 +72,7 @@ describe("Delete Room Function", () => {
     await handler({ req, res, log, error });
 
     expect(res.json).toHaveBeenCalledWith(
-+      { msg: "Missing required fields: appwriteRoomDocId" },
+      +{ msg: "Missing required fields: appwriteRoomDocId" },
       400
     );
   });
@@ -75,9 +85,6 @@ describe("Delete Room Function", () => {
 
     await handler({ req, res, log, error });
 
-    expect(res.json).toHaveBeenCalledWith(
-      { msg: "Room deletion failed" },
-      500
-    );
+    expect(res.json).toHaveBeenCalledWith({ msg: "Room deletion failed" }, 500);
   });
 });
