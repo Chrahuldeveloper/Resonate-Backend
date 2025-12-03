@@ -29,9 +29,12 @@ jest.mock("node-appwrite", () => {
   };
 });
 
-jest.mock("./utils", () => ({
-  throwIfMissing: jest.fn(),
-}));
+jest.mock("./utils", () => {
+  const originalModule = jest.requireActual("./utils");
+  return {
+    throwIfMissing: originalModule.throwIfMissing,
+  };
+});
 
 describe("Random Pairing Function", () => {
   let req, res, log, error;
