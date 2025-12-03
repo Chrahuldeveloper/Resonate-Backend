@@ -20,14 +20,22 @@ module.exports = async function ({ req, res, log, error }) {
       priority: "high",
     },
   };
-  await getMessaging(app)
-    .send(message)
-    .then((response) => {
-      log("Notifications were sent successfully, " + JSON.stringify(response));
-    })
-    .catch((error) => {
-      log("Error sending message:", error);
+  try {
+    const response = await getMessaging(app).send(message);
+    log("Notifications were sent successfully, " + JSON.stringify(response));
+    return res.json({
+      message: "Notification sent",
     });
+  } catch (err) {
+    log("Error sending message: " + JSON.stringify(err));
+    return res.json(
+      {
+        message: "Failed to send notification",
+        error: err.message,
+      },
+      500
+    );
+  }
 
   return res.json({
     message: "Notification sent",
