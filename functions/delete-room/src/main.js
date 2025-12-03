@@ -29,14 +29,8 @@ module.exports = async ({ req, res, log, error }) => {
   );
 
   try {
-    throwIfMissing(JSON.parse(req.body), ["appwriteRoomDocId"]);
-  } catch (err) {
-    return res.json({ msg: err.message }, 400);
-  }
-
-  try {
-    log(req);
-    const { appwriteRoomDocId, livekitToken } = JSON.parse(req.body);
+    const { appwriteRoomDocId } = JSON.parse(req.body);
+    throwIfMissing({ appwriteRoomDocId }, ["appwriteRoomDocId"]);
 
     const appwriteRoom = await databases.getDocument(
       process.env.MASTER_DATABASE_ID,
