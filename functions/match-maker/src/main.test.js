@@ -43,7 +43,6 @@ describe("Random Pairing Function", () => {
     process.env.REQUESTS_COLLECTION_ID = "requests";
     process.env.ACTIVE_PAIRS_COLLECTION_ID = "pairs";
 
-    // Updated to match main.js fix (last segment is doc ID)
     req = {
       headers: {
         "x-appwrite-event": "collections.requests.documents.create.123",
@@ -75,7 +74,6 @@ describe("Random Pairing Function", () => {
     mockDb.deleteDocument.mockResolvedValue({});
   });
 
-  // Working tests only
   it("should return message if request is not random", async () => {
     mockDb.getDocument.mockResolvedValueOnce({ isRandom: false });
 

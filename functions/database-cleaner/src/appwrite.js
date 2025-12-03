@@ -29,34 +29,6 @@ class AppwriteService {
   }
 
   async cleanParticipantsCollection() {
-    let done = false;
-    const queries = [Query.limit(25)];
-
-    while (!done) {
-      const participantDocs = await this.databases.listDocuments(
-        process.env.MASTER_DATABASE_ID,
-        process.env.PARTICIPANTS_COLLECTION_ID,
-        queries
-      );
-
-      await Promise.all(
-        participantDocs.documents.map(async (participantDoc) => {
-          const exists = await this.doesRoomExist(participantDoc.roomId);
-          if (!exists) {
-            await this.databases.deleteDocument(
-              process.env.MASTER_DATABASE_ID,
-              process.env.PARTICIPANTS_COLLECTION_ID,
-              participantDoc.$id
-            );
-          }
-        })
-      );
-
-      done = participantDocs.total === 0;
-    }
-  }
-
-  async cleanParticipantsCollection() {
     let cursor = null;
 
     while (true) {
