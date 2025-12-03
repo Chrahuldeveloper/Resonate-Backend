@@ -52,8 +52,9 @@ module.exports = async ({ req, res, log, error }) => {
   log(requestDocsRef.documents);
 
   for (let index = 0; index < requestDocsRef.documents.length; index++) {
+    let newPairDoc;
     try {
-      const newPairDoc = await db.createDocument(
+      newPairDoc = await db.createDocument(
         process.env.DATABASE_ID,
         process.env.ACTIVE_PAIRS_COLLECTION_ID,
         ID.unique(),
@@ -70,9 +71,15 @@ module.exports = async ({ req, res, log, error }) => {
               }),
         }
       );
+    } catch (e) {
+      error("Failed to create pair, trying next candidate: ");
+      error(String(e));
+      continue;
+    }
 
-      log(newPairDoc);
+    log(newPairDoc);
 
+    try {
       await db.deleteDocument(
         process.env.DATABASE_ID,
         process.env.REQUESTS_COLLECTION_ID,
@@ -83,15 +90,15 @@ module.exports = async ({ req, res, log, error }) => {
         process.env.REQUESTS_COLLECTION_ID,
         newRequestDocId
       );
-
-      return res.json({
-        message: "Request was paired",
-        newPair: newPairDoc,
-      });
     } catch (e) {
-      error("That request is already paired: ");
+      error("Pair created but cleanup failed (requests may be orphaned): ");
       error(String(e));
     }
+
+    return res.json({
+      message: "Request was paired",
+      newPair: newPairDoc,
+    });
   }
 
   return res.json({

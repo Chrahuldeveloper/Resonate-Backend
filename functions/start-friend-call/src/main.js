@@ -37,7 +37,4 @@ module.exports = async function ({ req, res, log, error }) {
     );
   }
 
-  return res.json({
-    message: "Notification sent",
-  });
 };
