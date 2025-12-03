@@ -3,9 +3,10 @@ const { Client, Databases } = require("node-appwrite");
 class AppwriteService {
   constructor() {
     const client = new Client()
-      .setEndpoint(process.env.APPWRITE_ENDPOINT || "https://cloud.appwrite.io/v1")
-      .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
-      .setKey(process.env.APPWRITE_API_KEY);
+      .setEndpoint(
+        process.env.APPWRITE_ENDPOINT || "https://cloud.appwrite.io/v1"
+      )
+      .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID);
 
     this.databases = new Databases(client);
   }
