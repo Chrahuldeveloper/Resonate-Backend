@@ -1,14 +1,11 @@
 const { Client, Databases, Query } = require("node-appwrite");
-
 const { getExpiryDate } = require("./utils.js");
 
 class AppwriteService {
   constructor() {
     const client = new Client();
     client
-      .setEndpoint(
-        process.env.APPWRITE_ENDPOINT ?? "https://cloud.appwrite.io/v1"
-      )
+      .setEndpoint(process.env.APPWRITE_ENDPOINT ?? "https://cloud.appwrite.io/v1")
       .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
       .setKey(process.env.APPWRITE_API_KEY);
 
@@ -30,20 +27,31 @@ class AppwriteService {
   }
 
   async cleanParticipantsCollection() {
-    const participantDocs = await this.databases.listDocuments(
-      process.env.MASTER_DATABASE_ID,
-      process.env.PARTICIPANTS_COLLECTION_ID
-    );
+    let done = false;
+    const queries = [Query.limit(25)];
 
-    participantDocs.documents.forEach(async (participantDoc) => {
-      if (!(await this.doesRoomExist(participantDoc.roomId))) {
-        await this.databases.deleteDocument(
-          process.env.MASTER_DATABASE_ID,
-          process.env.PARTICIPANTS_COLLECTION_ID,
-          participantDoc.$id
-        );
-      }
-    });
+    while (!done) {
+      const participantDocs = await this.databases.listDocuments(
+        process.env.MASTER_DATABASE_ID,
+        process.env.PARTICIPANTS_COLLECTION_ID,
+        queries
+      );
+
+      await Promise.all(
+        participantDocs.documents.map(async (participantDoc) => {
+          const exists = await this.doesRoomExist(participantDoc.roomId);
+          if (!exists) {
+            await this.databases.deleteDocument(
+              process.env.MASTER_DATABASE_ID,
+              process.env.PARTICIPANTS_COLLECTION_ID,
+              participantDoc.$id
+            );
+          }
+        })
+      );
+
+      done = participantDocs.total === 0;
+    }
   }
 
   async cleanActivePairsCollection() {
@@ -52,12 +60,14 @@ class AppwriteService {
       Query.lessThan("$createdAt", getExpiryDate()),
       Query.limit(25),
     ];
+
     do {
       const activePairDocs = await this.databases.listDocuments(
         process.env.MASTER_DATABASE_ID,
         process.env.ACTIVE_PAIRS_COLLECTION_ID,
         queries
       );
+
       await Promise.all(
         activePairDocs.documents.map((activePairDoc) =>
           this.databases.deleteDocument(
@@ -67,16 +77,19 @@ class AppwriteService {
           )
         )
       );
+
       done = activePairDocs.total === 0;
     } while (!done);
   }
 
   async clearOldOTPs() {
-    let done;
-
+    let done = false;
     const currentDate = new Date().toDateString();
 
-    const queries = [Query.notEqual("date", currentDate), Query.limit(100)];
+    const queries = [
+      Query.notEqual("date", currentDate),
+      Query.limit(100),
+    ];
 
     do {
       const oneDayOldOTPs = await this.databases.listDocuments(
